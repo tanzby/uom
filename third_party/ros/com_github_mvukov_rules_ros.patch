@@ -1,0 +1,42 @@
+diff --git a/ros/interfaces.bzl b/ros/interfaces.bzl
+index 3c914a3..7a78e47 100644
+--- a/ros/interfaces.bzl
++++ b/ros/interfaces.bzl
+@@ -20,7 +20,6 @@ Inspired by code in https://github.com/nicolov/ros-bazel repo.
+ load("//ros:utils.bzl", "get_stem")
+ load("@bazel_skylib//lib:paths.bzl", "paths")
+ load("@rules_cc//cc:defs.bzl", "cc_library")
+-load("@rules_python//python:defs.bzl", "py_library")
+ 
+ RosInterfaceInfo = provider(
+     "Provides info for interface code generation.",
+@@ -419,7 +418,7 @@ def py_ros_interface_library(name, deps, **kwargs):
+         name = name_genpy,
+         deps = deps,
+     )
+-    py_library(
++    native.py_library(
+         name = name,
+         deps = [name_genpy, "@ros_genpy//:genpy"],
+         **kwargs
+diff --git a/ros/topic.bzl b/ros/topic.bzl
+index e8e7df9..96df046 100644
+--- a/ros/topic.bzl
++++ b/ros/topic.bzl
+@@ -1,7 +1,6 @@
+ """ Implements a macro for setting up target-dependent rostopic app.
+ """
+ 
+-load("@rules_python//python:defs.bzl", "py_binary")
+ load("//ros:interfaces.bzl", "py_ros_interface_collector")
+ 
+ def ros_topic(name, deps):
+@@ -18,7 +17,7 @@ def ros_topic(name, deps):
+         name = interfaces,
+         deps = deps,
+     )
+-    py_binary(
++    native.py_binary(
+         name = name,
+         srcs = ["@ros_comm//:rostopic_app.py"],
+         main = "@ros_comm//:rostopic_app.py",

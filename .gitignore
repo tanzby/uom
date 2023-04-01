@@ -1,0 +1,5 @@
+bazel*
+external
+compile_commands.json
+.cache
+*build

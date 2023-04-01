@@ -1,0 +1,35 @@
+{
+    "git.autorefresh": false,
+    "files.exclude": {
+        ".cache": true,
+        "bazel**": true,
+        "**/cmake*": true,
+        "**/build*": true,
+        "**/.clwb*": true,
+    },
+    // Search
+    "search.quickOpen.includeHistory": true,
+    "search.quickOpen.includeSymbols": false,
+    "search.searchOnType": true,
+    "search.exclude": {
+        "external": true,
+        "**/bazel*": true,
+        "**/make*": true,
+    },
+    // Cpp
+    "C_Cpp.intelliSenseEngine": "Disabled",
+    // Python
+    "python.languageServer": "Pylance",
+    "python.analysis.indexing": true,
+    "python.analysis.exclude": [
+        ".cache",
+        "**/bazel*",
+        "**/make*",
+        "**/cmake*",
+        "**/build*",
+        "**/external",
+    ],
+    "files.associations": {
+        "random": "cpp"
+    },
+}

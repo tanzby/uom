@@ -1,0 +1,106 @@
+From bcb22c1d3b7da138162a78b1c77ac49d475e0e2a Mon Sep 17 00:00:00 2001
+From: Milan Vukov <mvukov@gmail.com>
+Date: Mon, 1 Aug 2022 15:40:49 +0800
+Subject: [PATCH 3/3] remove pluginlib
+
+---
+ tools/rosbag_storage/include/rosbag/bag.h |  4 ----
+ tools/rosbag_storage/src/bag.cpp          | 12 ++++++++----
+ tools/rosbag_storage/src/no_encryptor.cpp |  4 ----
+ 3 files changed, 8 insertions(+), 12 deletions(-)
+
+diff --git a/tools/rosbag_storage/include/rosbag/bag.h b/tools/rosbag_storage/include/rosbag/bag.h
+index 53f36d675..4b8233e2d 100644
+--- a/tools/rosbag_storage/include/rosbag/bag.h
++++ b/tools/rosbag_storage/include/rosbag/bag.h
+@@ -62,8 +62,6 @@
+ #include <boost/format.hpp>
+ #include <boost/iterator/iterator_facade.hpp>
+ 
+-#include <pluginlib/class_loader.hpp>
+-
+ #include "console_bridge/console.h"
+ #if defined logDebug
+ # undef logDebug
+@@ -351,8 +349,6 @@ private:
+ 
+     mutable uint64_t decompressed_chunk_;      //!< position of decompressed chunk
+ 
+-    // Encryptor plugin loader
+-    pluginlib::ClassLoader<rosbag::EncryptorBase> encryptor_loader_;
+     // Active encryptor
+     boost::shared_ptr<rosbag::EncryptorBase> encryptor_;
+ };
+diff --git a/tools/rosbag_storage/src/bag.cpp b/tools/rosbag_storage/src/bag.cpp
+index a4fb8f1d5..aad79a7f2 100644
+--- a/tools/rosbag_storage/src/bag.cpp
++++ b/tools/rosbag_storage/src/bag.cpp
+@@ -30,6 +30,8 @@
+ #include "rosbag/query.h"
+ #include "rosbag/view.h"
+ 
++#include "rosbag/no_encryptor.h"
++
+ #if defined(_MSC_VER)
+   #include <stdint.h> // only on v2010 and later -> is this enough for msvc and linux?
+ #else
+@@ -39,6 +41,7 @@
+ #include <assert.h>
+ #include <iomanip>
+ 
++#include "boost/bind.hpp"
+ #include "console_bridge/console.h"
+ 
+ using std::map;
+@@ -53,12 +56,12 @@ using ros::Time;
+ 
+ namespace rosbag {
+ 
+-Bag::Bag() : encryptor_loader_("rosbag_storage", "rosbag::EncryptorBase")
++Bag::Bag()
+ {
+     init();
+ }
+ 
+-Bag::Bag(string const& filename, uint32_t mode) : encryptor_loader_("rosbag_storage", "rosbag::EncryptorBase")
++Bag::Bag(string const& filename, uint32_t mode)
+ {
+     init();
+     open(filename, mode);
+@@ -66,7 +69,8 @@ Bag::Bag(string const& filename, uint32_t mode) : encryptor_loader_("rosbag_stor
+ 
+ #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+ 
+-Bag::Bag(Bag&& other) : encryptor_loader_("rosbag_storage", "rosbag::EncryptorBase") {
++Bag::Bag(Bag&& other)
++{
+     init();
+     swap(other);
+ }
+@@ -218,7 +222,7 @@ void Bag::setEncryptorPlugin(std::string const& plugin_name, std::string const&
+     if (!chunks_.empty()) {
+         throw BagException("Cannot set encryption plugin after chunks are written");
+     }
+-    encryptor_ = encryptor_loader_.createInstance(plugin_name);
++    encryptor_ = boost::shared_ptr<rosbag::EncryptorBase>(new NoEncryptor);
+     encryptor_->initialize(*this, plugin_param);
+ }
+ 
+diff --git a/tools/rosbag_storage/src/no_encryptor.cpp b/tools/rosbag_storage/src/no_encryptor.cpp
+index 9e6174020..1ad4f01c2 100644
+--- a/tools/rosbag_storage/src/no_encryptor.cpp
++++ b/tools/rosbag_storage/src/no_encryptor.cpp
+@@ -35,10 +35,6 @@
+ #include "rosbag/bag.h"
+ #include "rosbag/no_encryptor.h"
+ 
+-#include <pluginlib/class_list_macros.hpp>
+-
+-PLUGINLIB_EXPORT_CLASS(rosbag::NoEncryptor, rosbag::EncryptorBase)
+-
+ namespace rosbag
+ {
+ 
+-- 
+2.36.0
+

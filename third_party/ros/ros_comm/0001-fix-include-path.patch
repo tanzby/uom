@@ -1,0 +1,697 @@
+From 4c7c5629a45a47fa6c73a7af0eacbbeb77cdbbaf Mon Sep 17 00:00:00 2001
+From: Milan Vukov <mvukov@gmail.com>
+Date: Sun, 31 Jan 2021 00:56:21 +0100
+Subject: [PATCH 1/3] Fix include path of the roscpp common header
+
+---
+ clients/roscpp/include/ros/advertise_options.h            | 2 +-
+ clients/roscpp/include/ros/advertise_service_options.h    | 2 +-
+ clients/roscpp/include/ros/callback_queue.h               | 2 +-
+ clients/roscpp/include/ros/callback_queue_interface.h     | 2 +-
+ clients/roscpp/include/ros/connection.h                   | 2 +-
+ clients/roscpp/include/ros/connection_manager.h           | 2 +-
+ clients/roscpp/include/ros/file_log.h                     | 2 +-
+ clients/roscpp/include/ros/init.h                         | 2 +-
+ clients/roscpp/include/ros/internal_timer_manager.h       | 2 +-
+ clients/roscpp/include/ros/intraprocess_publisher_link.h  | 2 +-
+ clients/roscpp/include/ros/intraprocess_subscriber_link.h | 2 +-
+ clients/roscpp/include/ros/io.h                           | 2 +-
+ clients/roscpp/include/ros/master.h                       | 2 +-
+ clients/roscpp/include/ros/message_deserializer.h         | 2 +-
+ clients/roscpp/include/ros/names.h                        | 2 +-
+ clients/roscpp/include/ros/network.h                      | 2 +-
+ clients/roscpp/include/ros/node_handle.h                  | 2 +-
+ clients/roscpp/include/ros/param.h                        | 2 +-
+ clients/roscpp/include/ros/poll_manager.h                 | 2 +-
+ clients/roscpp/include/ros/poll_set.h                     | 2 +-
+ clients/roscpp/include/ros/publication.h                  | 2 +-
+ clients/roscpp/include/ros/publisher_link.h               | 2 +-
+ clients/roscpp/include/ros/rosout_appender.h              | 2 +-
+ clients/roscpp/include/ros/service_client_options.h       | 2 +-
+ clients/roscpp/include/ros/service_manager.h              | 2 +-
+ clients/roscpp/include/ros/service_publication.h          | 2 +-
+ clients/roscpp/include/ros/service_server.h               | 2 +-
+ clients/roscpp/include/ros/single_subscriber_publisher.h  | 2 +-
+ clients/roscpp/include/ros/spinner.h                      | 2 +-
+ clients/roscpp/include/ros/statistics.h                   | 2 +-
+ clients/roscpp/include/ros/steady_timer.h                 | 2 +-
+ clients/roscpp/include/ros/steady_timer_options.h         | 2 +-
+ clients/roscpp/include/ros/subscribe_options.h            | 2 +-
+ clients/roscpp/include/ros/subscriber.h                   | 2 +-
+ clients/roscpp/include/ros/subscription_callback_helper.h | 2 +-
+ clients/roscpp/include/ros/subscription_queue.h           | 2 +-
+ clients/roscpp/include/ros/this_node.h                    | 2 +-
+ clients/roscpp/include/ros/timer.h                        | 2 +-
+ clients/roscpp/include/ros/timer_options.h                | 2 +-
+ clients/roscpp/include/ros/topic.h                        | 2 +-
+ clients/roscpp/include/ros/topic_manager.h                | 2 +-
+ clients/roscpp/include/ros/transport/transport_tcp.h      | 2 +-
+ clients/roscpp/include/ros/transport/transport_udp.h      | 2 +-
+ clients/roscpp/include/ros/transport_hints.h              | 2 +-
+ clients/roscpp/include/ros/transport_publisher_link.h     | 2 +-
+ clients/roscpp/include/ros/transport_subscriber_link.h    | 2 +-
+ clients/roscpp/include/ros/wall_timer.h                   | 2 +-
+ clients/roscpp/include/ros/wall_timer_options.h           | 2 +-
+ clients/roscpp/include/ros/xmlrpc_manager.h               | 2 +-
+ 49 files changed, 49 insertions(+), 49 deletions(-)
+
+diff --git a/clients/roscpp/include/ros/advertise_options.h b/clients/roscpp/include/ros/advertise_options.h
+index 0a221ad5c..ad163273d 100644
+--- a/clients/roscpp/include/ros/advertise_options.h
++++ b/clients/roscpp/include/ros/advertise_options.h
+@@ -30,7 +30,7 @@
+ 
+ #include "ros/forwards.h"
+ #include "ros/message_traits.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/advertise_service_options.h b/clients/roscpp/include/ros/advertise_service_options.h
+index e0321ad8c..97813b680 100644
+--- a/clients/roscpp/include/ros/advertise_service_options.h
++++ b/clients/roscpp/include/ros/advertise_service_options.h
+@@ -32,7 +32,7 @@
+ #include "ros/service_callback_helper.h"
+ #include "ros/service_traits.h"
+ #include "ros/message_traits.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/callback_queue.h b/clients/roscpp/include/ros/callback_queue.h
+index 1881f1cf9..d21e40dae 100644
+--- a/clients/roscpp/include/ros/callback_queue.h
++++ b/clients/roscpp/include/ros/callback_queue.h
+@@ -38,7 +38,7 @@
+ #include "ros/callback_queue_interface.h"
+ #include "ros/internal/condition_variable.h"
+ #include "ros/time.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <boost/shared_ptr.hpp>
+ #include <boost/thread/mutex.hpp>
+diff --git a/clients/roscpp/include/ros/callback_queue_interface.h b/clients/roscpp/include/ros/callback_queue_interface.h
+index d3b994b9b..d224cb65f 100644
+--- a/clients/roscpp/include/ros/callback_queue_interface.h
++++ b/clients/roscpp/include/ros/callback_queue_interface.h
+@@ -36,7 +36,7 @@
+ #define ROSCPP_CALLBACK_QUEUE_INTERFACE_H
+ 
+ #include <boost/shared_ptr.hpp>
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/types.h"
+ 
+ namespace ros
+diff --git a/clients/roscpp/include/ros/connection.h b/clients/roscpp/include/ros/connection.h
+index fbef78cb2..8948deef4 100644
+--- a/clients/roscpp/include/ros/connection.h
++++ b/clients/roscpp/include/ros/connection.h
+@@ -36,7 +36,7 @@
+ #define ROSCPP_CONNECTION_H
+ 
+ #include "ros/header.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <boost/signals2.hpp>
+ 
+diff --git a/clients/roscpp/include/ros/connection_manager.h b/clients/roscpp/include/ros/connection_manager.h
+index 3778a8c69..e43a521a5 100644
+--- a/clients/roscpp/include/ros/connection_manager.h
++++ b/clients/roscpp/include/ros/connection_manager.h
+@@ -27,7 +27,7 @@
+ 
+ #include "forwards.h"
+ #include "connection.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <boost/thread/mutex.hpp>
+ #include <boost/signals2/connection.hpp>
+diff --git a/clients/roscpp/include/ros/file_log.h b/clients/roscpp/include/ros/file_log.h
+index 1d046d9a7..f9909a4a3 100644
+--- a/clients/roscpp/include/ros/file_log.h
++++ b/clients/roscpp/include/ros/file_log.h
+@@ -30,7 +30,7 @@
+ 
+ #include "forwards.h"
+ #include <ros/console.h>
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #define ROSCPP_LOG_DEBUG(...) ROS_DEBUG_NAMED("roscpp_internal", __VA_ARGS__)
+ #define ROSCPP_CONN_LOG_DEBUG(...) ROS_DEBUG_NAMED("roscpp_internal.connections", __VA_ARGS__)
+diff --git a/clients/roscpp/include/ros/init.h b/clients/roscpp/include/ros/init.h
+index e87a38862..327ec395c 100644
+--- a/clients/roscpp/include/ros/init.h
++++ b/clients/roscpp/include/ros/init.h
+@@ -37,7 +37,7 @@
+ 
+ #include "ros/forwards.h"
+ #include "ros/spinner.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/internal_timer_manager.h b/clients/roscpp/include/ros/internal_timer_manager.h
+index 44e23c2d5..c1710d4fd 100644
+--- a/clients/roscpp/include/ros/internal_timer_manager.h
++++ b/clients/roscpp/include/ros/internal_timer_manager.h
+@@ -30,7 +30,7 @@
+ 
+ #include "forwards.h"
+ #include <ros/time.h>
+-#include "common.h"
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/intraprocess_publisher_link.h b/clients/roscpp/include/ros/intraprocess_publisher_link.h
+index 3e5533268..47a80d638 100644
+--- a/clients/roscpp/include/ros/intraprocess_publisher_link.h
++++ b/clients/roscpp/include/ros/intraprocess_publisher_link.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_INTRAPROCESS_PUBLISHER_LINK_H
+ 
+ #include "publisher_link.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <boost/thread/recursive_mutex.hpp>
+ 
+diff --git a/clients/roscpp/include/ros/intraprocess_subscriber_link.h b/clients/roscpp/include/ros/intraprocess_subscriber_link.h
+index 17b8637c9..086fd2c9d 100644
+--- a/clients/roscpp/include/ros/intraprocess_subscriber_link.h
++++ b/clients/roscpp/include/ros/intraprocess_subscriber_link.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_INTRAPROCESS_SUBSCRIBER_LINK_H
+ #define ROSCPP_INTRAPROCESS_SUBSCRIBER_LINK_H
+ #include "subscriber_link.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <boost/thread/recursive_mutex.hpp>
+ 
+diff --git a/clients/roscpp/include/ros/io.h b/clients/roscpp/include/ros/io.h
+index 441421212..c3fb07257 100644
+--- a/clients/roscpp/include/ros/io.h
++++ b/clients/roscpp/include/ros/io.h
+@@ -42,7 +42,7 @@
+ *****************************************************************************/
+ 
+ #include <string>
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #ifdef WIN32
+ 	#include <winsock2.h> // For struct timeval
+diff --git a/clients/roscpp/include/ros/master.h b/clients/roscpp/include/ros/master.h
+index 6cabd01e9..b546af8a5 100644
+--- a/clients/roscpp/include/ros/master.h
++++ b/clients/roscpp/include/ros/master.h
+@@ -30,7 +30,7 @@
+ 
+ #include "forwards.h"
+ #include "xmlrpcpp/XmlRpcValue.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/message_deserializer.h b/clients/roscpp/include/ros/message_deserializer.h
+index f17959851..bc1d81727 100644
+--- a/clients/roscpp/include/ros/message_deserializer.h
++++ b/clients/roscpp/include/ros/message_deserializer.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_MESSAGE_DESERIALIZER_H
+ 
+ #include "forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <ros/serialized_message.h>
+ 
+diff --git a/clients/roscpp/include/ros/names.h b/clients/roscpp/include/ros/names.h
+index c76e2d80f..fd7ee9f84 100644
+--- a/clients/roscpp/include/ros/names.h
++++ b/clients/roscpp/include/ros/names.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_NAMES_H
+ 
+ #include "forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/network.h b/clients/roscpp/include/ros/network.h
+index 4790e745c..9dc4d8323 100644
+--- a/clients/roscpp/include/ros/network.h
++++ b/clients/roscpp/include/ros/network.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_NETWORK_H
+ 
+ #include "forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/node_handle.h b/clients/roscpp/include/ros/node_handle.h
+index d084e5e07..e175a577a 100644
+--- a/clients/roscpp/include/ros/node_handle.h
++++ b/clients/roscpp/include/ros/node_handle.h
+@@ -45,7 +45,7 @@
+ #include "ros/wall_timer_options.h"
+ #include "ros/spinner.h"
+ #include "ros/init.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <boost/bind.hpp>
+ 
+diff --git a/clients/roscpp/include/ros/param.h b/clients/roscpp/include/ros/param.h
+index 2270ad64c..b32b6fc5f 100644
+--- a/clients/roscpp/include/ros/param.h
++++ b/clients/roscpp/include/ros/param.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_PARAM_H
+ 
+ #include "forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include "xmlrpcpp/XmlRpcValue.h"
+ 
+ #include <vector>
+diff --git a/clients/roscpp/include/ros/poll_manager.h b/clients/roscpp/include/ros/poll_manager.h
+index 86b1b60de..979f246f8 100644
+--- a/clients/roscpp/include/ros/poll_manager.h
++++ b/clients/roscpp/include/ros/poll_manager.h
+@@ -30,7 +30,7 @@
+ 
+ #include "forwards.h"
+ #include "poll_set.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <boost/signals2.hpp>
+ 
+diff --git a/clients/roscpp/include/ros/poll_set.h b/clients/roscpp/include/ros/poll_set.h
+index 5a6ede20d..d493d8e24 100644
+--- a/clients/roscpp/include/ros/poll_set.h
++++ b/clients/roscpp/include/ros/poll_set.h
+@@ -37,7 +37,7 @@
+ 
+ #include <vector>
+ #include "io.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include <boost/shared_ptr.hpp>
+ #include <boost/function.hpp>
+ #include <boost/thread/mutex.hpp>
+diff --git a/clients/roscpp/include/ros/publication.h b/clients/roscpp/include/ros/publication.h
+index 1ea2187c6..3d9917010 100644
+--- a/clients/roscpp/include/ros/publication.h
++++ b/clients/roscpp/include/ros/publication.h
+@@ -30,7 +30,7 @@
+ 
+ #include "ros/forwards.h"
+ #include "ros/advertise_options.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include "xmlrpcpp/XmlRpc.h"
+ 
+ #include <boost/thread/mutex.hpp>
+diff --git a/clients/roscpp/include/ros/publisher_link.h b/clients/roscpp/include/ros/publisher_link.h
+index d9858c52e..124d21a20 100644
+--- a/clients/roscpp/include/ros/publisher_link.h
++++ b/clients/roscpp/include/ros/publisher_link.h
+@@ -31,7 +31,7 @@
+ #include "ros/common.h"
+ #include "ros/transport_hints.h"
+ #include "ros/header.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include <boost/thread/mutex.hpp>
+ #include <boost/shared_array.hpp>
+ #include <boost/weak_ptr.hpp>
+diff --git a/clients/roscpp/include/ros/rosout_appender.h b/clients/roscpp/include/ros/rosout_appender.h
+index 032fd5a27..e87ef8a3e 100644
+--- a/clients/roscpp/include/ros/rosout_appender.h
++++ b/clients/roscpp/include/ros/rosout_appender.h
+@@ -36,7 +36,7 @@
+ #define ROSCPP_ROSOUT_APPENDER_H
+ 
+ #include <ros/message_forward.h>
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include "ros/internal/condition_variable.h"
+ 
+diff --git a/clients/roscpp/include/ros/service_client_options.h b/clients/roscpp/include/ros/service_client_options.h
+index 5c306b930..77002d11b 100644
+--- a/clients/roscpp/include/ros/service_client_options.h
++++ b/clients/roscpp/include/ros/service_client_options.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_SERVICE_CLIENT_OPTIONS_H
+ 
+ #include "ros/forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/service_traits.h"
+ 
+ namespace ros
+diff --git a/clients/roscpp/include/ros/service_manager.h b/clients/roscpp/include/ros/service_manager.h
+index 1336afb68..ebac7be7b 100644
+--- a/clients/roscpp/include/ros/service_manager.h
++++ b/clients/roscpp/include/ros/service_manager.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_SERVICE_MANAGER_H
+ 
+ #include "forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include "advertise_service_options.h"
+ #include "service_client_options.h"
+ 
+diff --git a/clients/roscpp/include/ros/service_publication.h b/clients/roscpp/include/ros/service_publication.h
+index ff4f8b4d8..2f6a73dcd 100644
+--- a/clients/roscpp/include/ros/service_publication.h
++++ b/clients/roscpp/include/ros/service_publication.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_SERVICE_PUBLICATION_H
+ 
+ #include "ros/service_callback_helper.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include "xmlrpcpp/XmlRpc.h"
+ 
+ #include <boost/thread/mutex.hpp>
+diff --git a/clients/roscpp/include/ros/service_server.h b/clients/roscpp/include/ros/service_server.h
+index e7d253e69..d76d3ec02 100644
+--- a/clients/roscpp/include/ros/service_server.h
++++ b/clients/roscpp/include/ros/service_server.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_SERVICE_HANDLE_H
+ 
+ #include "ros/forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/single_subscriber_publisher.h b/clients/roscpp/include/ros/single_subscriber_publisher.h
+index ad40f36d8..e24f6dc6b 100644
+--- a/clients/roscpp/include/ros/single_subscriber_publisher.h
++++ b/clients/roscpp/include/ros/single_subscriber_publisher.h
+@@ -30,7 +30,7 @@
+ 
+ #include "ros/forwards.h"
+ #include "ros/serialization.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <boost/utility.hpp>
+ 
+diff --git a/clients/roscpp/include/ros/spinner.h b/clients/roscpp/include/ros/spinner.h
+index b862e1b31..ed87b3aee 100644
+--- a/clients/roscpp/include/ros/spinner.h
++++ b/clients/roscpp/include/ros/spinner.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_SPINNER_H
+ 
+ #include "ros/types.h"
+-#include "common.h"
++#include "ros/common.h"
+ 
+ #include <boost/shared_ptr.hpp>
+ 
+diff --git a/clients/roscpp/include/ros/statistics.h b/clients/roscpp/include/ros/statistics.h
+index a0a6a1c01..0cad1df91 100644
+--- a/clients/roscpp/include/ros/statistics.h
++++ b/clients/roscpp/include/ros/statistics.h
+@@ -30,7 +30,7 @@
+ 
+ #include "forwards.h"
+ #include "poll_set.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include "publisher.h"
+ #include <ros/time.h>
+ #include "ros/subscription_callback_helper.h"
+diff --git a/clients/roscpp/include/ros/steady_timer.h b/clients/roscpp/include/ros/steady_timer.h
+index c88388df5..745e92b6b 100644
+--- a/clients/roscpp/include/ros/steady_timer.h
++++ b/clients/roscpp/include/ros/steady_timer.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_STEADY_TIMER_H
+ #define ROSCPP_STEADY_TIMER_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "forwards.h"
+ #include "steady_timer_options.h"
+ 
+diff --git a/clients/roscpp/include/ros/steady_timer_options.h b/clients/roscpp/include/ros/steady_timer_options.h
+index e93a973de..312917761 100644
+--- a/clients/roscpp/include/ros/steady_timer_options.h
++++ b/clients/roscpp/include/ros/steady_timer_options.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_STEADY_TIMER_OPTIONS_H
+ #define ROSCPP_STEADY_TIMER_OPTIONS_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/forwards.h"
+ 
+ namespace ros
+diff --git a/clients/roscpp/include/ros/subscribe_options.h b/clients/roscpp/include/ros/subscribe_options.h
+index 52c602bc5..c3943ac4e 100644
+--- a/clients/roscpp/include/ros/subscribe_options.h
++++ b/clients/roscpp/include/ros/subscribe_options.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_SUBSCRIBE_OPTIONS_H
+ 
+ #include "ros/forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/transport_hints.h"
+ #include "ros/message_traits.h"
+ #include "subscription_callback_helper.h"
+diff --git a/clients/roscpp/include/ros/subscriber.h b/clients/roscpp/include/ros/subscriber.h
+index da05d143d..2c001b696 100644
+--- a/clients/roscpp/include/ros/subscriber.h
++++ b/clients/roscpp/include/ros/subscriber.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_SUBSCRIBER_HANDLE_H
+ #define ROSCPP_SUBSCRIBER_HANDLE_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/forwards.h"
+ #include "ros/subscription_callback_helper.h"
+ 
+diff --git a/clients/roscpp/include/ros/subscription_callback_helper.h b/clients/roscpp/include/ros/subscription_callback_helper.h
+index fca3b5f44..bd29f40db 100644
+--- a/clients/roscpp/include/ros/subscription_callback_helper.h
++++ b/clients/roscpp/include/ros/subscription_callback_helper.h
+@@ -30,7 +30,7 @@
+ 
+ #include <typeinfo>
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/forwards.h"
+ #include "ros/parameter_adapter.h"
+ #include "ros/message_traits.h"
+diff --git a/clients/roscpp/include/ros/subscription_queue.h b/clients/roscpp/include/ros/subscription_queue.h
+index 1df0d5fc3..b3d0d6a96 100644
+--- a/clients/roscpp/include/ros/subscription_queue.h
++++ b/clients/roscpp/include/ros/subscription_queue.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_SUBSCRIPTION_QUEUE_H
+ 
+ #include "forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/message_event.h"
+ #include "callback_queue_interface.h"
+ 
+diff --git a/clients/roscpp/include/ros/this_node.h b/clients/roscpp/include/ros/this_node.h
+index 5abf682be..0f616f5c3 100644
+--- a/clients/roscpp/include/ros/this_node.h
++++ b/clients/roscpp/include/ros/this_node.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_THIS_NODE_H
+ #define ROSCPP_THIS_NODE_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "forwards.h"
+ 
+ namespace ros
+diff --git a/clients/roscpp/include/ros/timer.h b/clients/roscpp/include/ros/timer.h
+index a62cfa434..7277b93ad 100644
+--- a/clients/roscpp/include/ros/timer.h
++++ b/clients/roscpp/include/ros/timer.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_TIMER_H
+ #define ROSCPP_TIMER_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "forwards.h"
+ #include "timer_options.h"
+ 
+diff --git a/clients/roscpp/include/ros/timer_options.h b/clients/roscpp/include/ros/timer_options.h
+index ecac49b14..61c3337d7 100644
+--- a/clients/roscpp/include/ros/timer_options.h
++++ b/clients/roscpp/include/ros/timer_options.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_TIMER_OPTIONS_H
+ #define ROSCPP_TIMER_OPTIONS_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/forwards.h"
+ 
+ namespace ros
+diff --git a/clients/roscpp/include/ros/topic.h b/clients/roscpp/include/ros/topic.h
+index dc62d1981..fd498bbba 100644
+--- a/clients/roscpp/include/ros/topic.h
++++ b/clients/roscpp/include/ros/topic.h
+@@ -35,7 +35,7 @@
+ #ifndef ROSCPP_TOPIC_H
+ #define ROSCPP_TOPIC_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "node_handle.h"
+ #include <boost/shared_ptr.hpp>
+ 
+diff --git a/clients/roscpp/include/ros/topic_manager.h b/clients/roscpp/include/ros/topic_manager.h
+index 3a80f9c10..83df01125 100644
+--- a/clients/roscpp/include/ros/topic_manager.h
++++ b/clients/roscpp/include/ros/topic_manager.h
+@@ -29,7 +29,7 @@
+ #define ROSCPP_TOPIC_MANAGER_H
+ 
+ #include "forwards.h"
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/serialization.h"
+ #include "rosout_appender.h"
+ 
+diff --git a/clients/roscpp/include/ros/transport/transport_tcp.h b/clients/roscpp/include/ros/transport/transport_tcp.h
+index 819c15ea9..38602a22b 100644
+--- a/clients/roscpp/include/ros/transport/transport_tcp.h
++++ b/clients/roscpp/include/ros/transport/transport_tcp.h
+@@ -40,7 +40,7 @@
+ 
+ #include <boost/thread/recursive_mutex.hpp>
+ #include "ros/io.h"
+-#include <ros/common.h>
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/transport/transport_udp.h b/clients/roscpp/include/ros/transport/transport_udp.h
+index 43cdfbc59..2b472acf9 100644
+--- a/clients/roscpp/include/ros/transport/transport_udp.h
++++ b/clients/roscpp/include/ros/transport/transport_udp.h
+@@ -40,7 +40,7 @@
+ 
+ #include <boost/thread/mutex.hpp>
+ #include "ros/io.h"
+-#include <ros/common.h>
++#include "ros/common.h"
+ 
+ namespace ros
+ {
+diff --git a/clients/roscpp/include/ros/transport_hints.h b/clients/roscpp/include/ros/transport_hints.h
+index aaab55d0c..def9c8171 100644
+--- a/clients/roscpp/include/ros/transport_hints.h
++++ b/clients/roscpp/include/ros/transport_hints.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_TRANSPORT_HINTS_H
+ #define ROSCPP_TRANSPORT_HINTS_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/forwards.h"
+ 
+ #include <boost/lexical_cast.hpp>
+diff --git a/clients/roscpp/include/ros/transport_publisher_link.h b/clients/roscpp/include/ros/transport_publisher_link.h
+index 7d462920c..5034aca77 100644
+--- a/clients/roscpp/include/ros/transport_publisher_link.h
++++ b/clients/roscpp/include/ros/transport_publisher_link.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_TRANSPORT_PUBLISHER_LINK_H
+ #define ROSCPP_TRANSPORT_PUBLISHER_LINK_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "publisher_link.h"
+ #include "connection.h"
+ 
+diff --git a/clients/roscpp/include/ros/transport_subscriber_link.h b/clients/roscpp/include/ros/transport_subscriber_link.h
+index 67e7662a6..45bd00885 100644
+--- a/clients/roscpp/include/ros/transport_subscriber_link.h
++++ b/clients/roscpp/include/ros/transport_subscriber_link.h
+@@ -27,7 +27,7 @@
+ 
+ #ifndef ROSCPP_TRANSPORT_SUBSCRIBER_LINK_H
+ #define ROSCPP_TRANSPORT_SUBSCRIBER_LINK_H
+-#include "common.h"
++#include "ros/common.h"
+ #include "subscriber_link.h"
+ 
+ #include <boost/signals2/connection.hpp>
+diff --git a/clients/roscpp/include/ros/wall_timer.h b/clients/roscpp/include/ros/wall_timer.h
+index 04379c6df..2eb3dbb35 100644
+--- a/clients/roscpp/include/ros/wall_timer.h
++++ b/clients/roscpp/include/ros/wall_timer.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_WALL_TIMER_H
+ #define ROSCPP_WALL_TIMER_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "forwards.h"
+ #include "wall_timer_options.h"
+ 
+diff --git a/clients/roscpp/include/ros/wall_timer_options.h b/clients/roscpp/include/ros/wall_timer_options.h
+index eedc788f9..70b0e8994 100644
+--- a/clients/roscpp/include/ros/wall_timer_options.h
++++ b/clients/roscpp/include/ros/wall_timer_options.h
+@@ -28,7 +28,7 @@
+ #ifndef ROSCPP_WALL_TIMER_OPTIONS_H
+ #define ROSCPP_WALL_TIMER_OPTIONS_H
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "ros/forwards.h"
+ 
+ namespace ros
+diff --git a/clients/roscpp/include/ros/xmlrpc_manager.h b/clients/roscpp/include/ros/xmlrpc_manager.h
+index 0d41f12cf..6aac97eb2 100644
+--- a/clients/roscpp/include/ros/xmlrpc_manager.h
++++ b/clients/roscpp/include/ros/xmlrpc_manager.h
+@@ -35,7 +35,7 @@
+ #include <boost/thread/thread.hpp>
+ #include <boost/enable_shared_from_this.hpp>
+ 
+-#include "common.h"
++#include "ros/common.h"
+ #include "xmlrpcpp/XmlRpc.h"
+ 
+ #include <ros/time.h>
+-- 
+2.36.0
+
