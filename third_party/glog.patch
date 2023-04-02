@@ -1,0 +1,36 @@
+From 4879a5dbf8e7f21b23a4519149b61019900999e6 Mon Sep 17 00:00:00 2001
+From: tanzby <tanzby@outlook.com>
+Date: Sun, 2 Apr 2023 01:16:03 +0800
+Subject: [PATCH] patch
+
+---
+ bazel/glog.bzl | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/bazel/glog.bzl b/bazel/glog.bzl
+index 4208d9e..d34098f 100644
+--- a/bazel/glog.bzl
++++ b/bazel/glog.bzl
+@@ -164,6 +164,10 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
+             ":stl_logging_h",
+             ":vlog_is_on_h",
+         ],
++        includes = [
++            ".",
++            "src",
++        ],
+         strip_include_prefix = "src",
+         defines = select({
+             # GLOG_EXPORT is normally set by export.h, but that's not
+@@ -188,7 +192,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
+             }) +
+             select({
+                 ":clang-cl": clang_cl_only_copts,
+-                "//conditions:default": []
++                "//conditions:default": [],
+             }),
+         deps = gflags_deps + select({
+             "@bazel_tools//src/conditions:windows": [":strip_include_prefix_hack"],
+-- 
+2.25.1
+
