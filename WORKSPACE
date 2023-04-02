@@ -3,6 +3,19 @@ workspace(name = "uom")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+# Hedron's Compile Commands Extractor for Bazel
+# https://github.com/hedronvision/bazel-compile-commands-extractor
+http_archive(
+    name = "hedron_compile_commands",
+    sha256 = "7f6ebb62298694d8cf3ecaed81b3bb48de559819ac1909d4055abdc8c0ae1000",
+    strip_prefix = "bazel-compile-commands-extractor-800b9cd260ce3878e94abb7d583a7c0865f7d967",
+    url = "https://github.com/hedronvision/bazel-compile-commands-extractor/archive/800b9cd260ce3878e94abb7d583a7c0865f7d967.tar.gz",
+)
+
+load("@hedron_compile_commands//:workspace_setup.bzl", "hedron_compile_commands_setup")
+
+hedron_compile_commands_setup()
+
 new_git_repository(
     name = "eigen",
     build_file = "//third_party:eigen.BUILD",
@@ -27,11 +40,11 @@ new_git_repository(
 git_repository(
     name = "com_google_absl",
     remote = "https://github.com/abseil/abseil-cpp.git",
-    tag = "20230125.2",
     repo_mapping = {
-        "@com_google_googletest": "@googletest",
+        "@com_google_googletest": "@gtest",
         "@com_github_google_benchmark": "@benchmark",
     },
+    tag = "20230125.2",
 )
 
 git_repository(
@@ -60,6 +73,10 @@ git_repository(
 
 git_repository(
     name = "glog",
+    patch_args = ["-p1"],
+    patches = [
+        "//third_party:glog.patch",
+    ],
     remote = "https://github.com/google/glog.git",
     repo_mapping = {
         "@com_github_gflags_gflags": "@gflags",
@@ -97,7 +114,7 @@ git_repository(
 )
 
 http_archive(
-    name = "googletest",
+    name = "gtest",
     sha256 = "82ad62a4e26c199de52a707778334e80f6b195dd298d48d520d8507d2bcb88c4",
     strip_prefix = "googletest-2d4f208765af7fa376b878860a7677ecc0bc390a",
     urls = [
@@ -110,7 +127,7 @@ http_archive(
     sha256 = "ede6830512f21490eeea1f238f083702eb178890820c14451c1c3d69fd375b19",
     strip_prefix = "benchmark-a3235d7b69c84e8c9ff8722a22b8ac5e1bc716a6",
     urls = [
-        "https://github.com/google/benchmark/archive/a3235d7b69c84e8c9ff8722a22b8ac5e1bc716a6.zip"
+        "https://github.com/google/benchmark/archive/a3235d7b69c84e8c9ff8722a22b8ac5e1bc716a6.zip",
     ],
 )
 
