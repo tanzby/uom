@@ -31,6 +31,8 @@ cc_ros_library(
     srcs = glob(["utilities/xmlrpcpp/src/*.cpp"]),
     hdrs = glob(["utilities/xmlrpcpp/include/xmlrpcpp/*.h"]),
     includes = ["utilities/xmlrpcpp/include"],
+    linkopts = ["-lm"],
+    visibility = ["//visibility:public"],
     deps = [
         ":libb64",
         "@boost//:thread",
@@ -54,9 +56,9 @@ cc_ros_interface_library(
 
 ROS_VERSION_MAJOR = 1
 
-ROS_VERSION_MINOR = 14
+ROS_VERSION_MINOR = 16
 
-ROS_VERSION_PATCH = 13
+ROS_VERSION_PATCH = 0
 
 _ROS_COMMON_H = "ros/common.h"
 
@@ -81,9 +83,18 @@ _CONFIG_COMMON_SUBSTITUTIONS = {
 expand_template(
     name = "config_h",
     out = _CONFIG_H,
-    substitutions = dicts.add(
-        _CONFIG_COMMON_SUBSTITUTIONS,
-        {"#cmakedefine HAVE_EPOLL": "#define HAVE_EPOLL"},
+    substitutions = select(
+        {
+            "@platforms//os:linux": dicts.add(
+                _CONFIG_COMMON_SUBSTITUTIONS,
+                {"#cmakedefine HAVE_EPOLL": "#define HAVE_EPOLL"},
+            ),
+            "@platforms//os:macos": dicts.add(
+                _CONFIG_COMMON_SUBSTITUTIONS,
+                {"#cmakedefine HAVE_EPOLL": "/*#cmakedefine HAVE_EPOLL*/"},
+            ),
+        },
+        no_match_error = "Only Linux and macOS are supported!",
     ),
     template = "clients/roscpp/src/libros/config.h.in",
 )
@@ -93,8 +104,12 @@ cc_ros_library(
     srcs = glob(["clients/roscpp/src/libros/**/*.cpp"]) + [_CONFIG_H],
     hdrs = glob(["clients/roscpp/include/**/*.h"]) + [_ROS_COMMON_H],
     copts = ["-Wno-unused-parameter"],
-    defines = ["BOOST_ALLOW_DEPRECATED_HEADERS"],
+    defines = ["BOOST_ALLOW_DEPRECATED_HEADERS"] + select({
+        "@platforms//os:macos": ["BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC"],
+        "//conditions:default": [""],
+    }),
     includes = ["clients/roscpp/include"],
+    linkopts = ["-lm"],
     ros_package_name = "roscpp",
     deps = [
         ":cc_roscpp",

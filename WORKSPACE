@@ -19,8 +19,8 @@ hedron_compile_commands_setup()
 new_git_repository(
     name = "eigen",
     build_file = "//third_party:eigen.BUILD",
+    commit = "3147391d946bb4b6c68edd901f2add6ac1f31f8c",  # 3.4.0
     remote = "https://gitlab.com/libeigen/eigen.git",
-    tag = "3.4.0",
 )
 
 new_git_repository(
@@ -49,6 +49,7 @@ git_repository(
 
 git_repository(
     name = "fmt",
+    commit = "a33701196adfad74917046096bf5a2aa0ab0bb50",  # 9.1.0
     patch_cmds = [
         "mv support/bazel/.bazelrc .bazelrc",
         "mv support/bazel/.bazelversion .bazelversion",
@@ -56,23 +57,23 @@ git_repository(
         "mv support/bazel/WORKSPACE.bazel WORKSPACE.bazel",
     ],
     remote = "https://github.com/fmtlib/fmt.git",
-    tag = "9.1.0",
 )
 
 git_repository(
     name = "bazel_skylib",
+    commit = "141432789c92e9db2402ef0be58e2a2d2c4dd1fd",
     remote = "https://github.com/bazelbuild/bazel-skylib.git",
-    tag = "1.4.1",
 )
 
 git_repository(
     name = "gflags",
+    commit = "e171aa2d15ed9eb17054558e0b3a6a413bb01067",  # v2.2.2
     remote = "https://github.com/gflags/gflags.git",
-    tag = "v2.2.2",
 )
 
 git_repository(
     name = "glog",
+    commit = "b33e3bad4c46c8a6345525fd822af355e5ef9446",  # v0.6.0
     patch_args = ["-p1"],
     patches = [
         "//third_party:glog.patch",
@@ -81,7 +82,6 @@ git_repository(
     repo_mapping = {
         "@com_github_gflags_gflags": "@gflags",
     },
-    tag = "v0.6.0",
 )
 
 git_repository(
@@ -92,8 +92,8 @@ git_repository(
 
 git_repository(
     name = "rules_python",
+    commit = "c394c46fc1b21853bc68a7a47c1fe2db828d1dd0",
     remote = "https://github.com/bazelbuild/rules_python.git",
-    tag = "0.20.0",
 )
 
 git_repository(
@@ -172,16 +172,21 @@ http_archive(
 )
 
 http_archive(
-    name = "boost",
-    build_file = "//third_party:boost.BUILD",
-    patch_args = ["-p1"],
-    patches = ["//third_party:boost.patch"],
-    sha256 = "273f1be93238a068aba4f9735a4a2b003019af067b9c183ed227780b8f36062c",
-    strip_prefix = "boost_1_79_0",
-    urls = [
-        "https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.gz",
-    ],
+    name = "com_github_nelhage_rules_boost",
+    repo_mapping = {
+        "@org_lzma_lzma": "@xz",
+        "@com_github_facebook_zstd": "@zstd",
+        "@org_bzip_bzip2": "@bzip2",
+        "@net_zlib_zlib": "@zlib",
+    },
+    sha256 = "d94689a734828e5cc9f6624e58c37cb201b87c3068669bc3d2d0d6400c421667",
+    strip_prefix = "rules_boost-db7d2da158e2dc49c5ba8007da4b4e3dd087b57a",
+    url = "https://github.com/nelhage/rules_boost/archive/db7d2da158e2dc49c5ba8007da4b4e3dd087b57a.tar.gz",
 )
+
+load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
+
+boost_deps()
 
 http_archive(
     name = "lz4",
@@ -196,10 +201,11 @@ http_archive(
 http_archive(
     name = "zstd",
     build_file = "//third_party:zstd.BUILD",
-    sha256 = "a364f5162c7d1a455cc915e8e3cf5f4bd8b75d09bc0f53965b0c9ca1383c52c8",
-    strip_prefix = "zstd-1.4.4",
+    sha256 = "98e9c3d949d1b924e28e01eccb7deed865eefebf25c2f21c702e5cd5b63b85e1",
+    strip_prefix = "zstd-1.5.5",
+    url = "https://github.com/facebook/zstd/archive/v1.5.5/zstd-1.5.5.tar.gz",
     urls = [
-        "https://github.com/facebook/zstd/archive/v1.4.4.tar.gz",
+        "https://github.com/facebook/zstd/archive/v1.5.5.tar.gz",
     ],
 )
 
@@ -287,17 +293,12 @@ new_local_repository(
     path = "/usr/include",
 )
 
-############################################ ROS ############################################
-# all packages' version follow the *melodic* release. see https://index.ros.org/
-
 http_archive(
     name = "com_github_mvukov_rules_ros",
-    patch_args = ["-p1"],
-    patches = ["//third_party/ros:com_github_mvukov_rules_ros.patch"],
-    sha256 = "d0c0424df79d5a9a7f375cdcaf542997c72937e276a494019d58b95038b1fec5",
-    strip_prefix = "rules_ros-0.1.0",
+    sha256 = "d2d96acc8702c4eea2c1560da874bc87be7f2c8dd5c751da598a065bec3410a7",
+    strip_prefix = "rules_ros-7d71becdf50a771a5df0ab20934fc52b33ef605e",
     urls = [
-        "https://github.com/mvukov/rules_ros/archive/refs/tags/v0.1.0.zip",
+        "https://github.com/mvukov/rules_ros/archive/7d71becdf50a771a5df0ab20934fc52b33ef605e.zip",
     ],
 )
 
@@ -316,11 +317,9 @@ http_archive(
 http_archive(
     name = "roscpp_core",
     build_file = "//third_party/ros:roscpp_core.BUILD",
-    sha256 = "d5a0ad09fa878d9f3d6d7f3e8c7854f0f160aeeea9c4d332e3dc87552087ca68",
-    # https://index.ros.org/p/roscpp_core/github-ros-roscpp_core/#melodic
-    strip_prefix = "roscpp_core-0.6.14",
+    strip_prefix = "roscpp_core-0.7.2",
     urls = [
-        "https://github.com/ros/roscpp_core/archive/0.6.14.tar.gz",
+        "https://github.com/ros/roscpp_core/archive/0.7.2.tar.gz",
     ],
 )
 
@@ -328,7 +327,6 @@ http_archive(
     name = "ros_genmsg",
     build_file = "//third_party/ros:genmsg.BUILD",
     sha256 = "0e414846823a2aaa7781f81268251c7c9a45ff96cef8e6a78bbbbcf7e4c28d56",
-    # https://index.ros.org/p/genmsg/github-ros-genmsg/#melodic
     strip_prefix = "genmsg-0.5.16",
     urls = [
         "https://github.com/ros/genmsg/archive/0.5.16.tar.gz",
@@ -338,8 +336,9 @@ http_archive(
 http_archive(
     name = "ros_gencpp",
     build_file = "//third_party/ros:gencpp.BUILD",
+    patch_args = ["-p1"],
+    patches = ["//third_party:ros_gencpp.patch"],
     sha256 = "05acfeeb1bbc374356bf7674fee2a7aab3bf6a48ebad4a06fd0f0d4455a60720",
-    # https://index.ros.org/p/gencpp/github-ros-gencpp/#melodic
     strip_prefix = "gencpp-0.6.5",
     urls = [
         "https://github.com/ros/gencpp/archive/0.6.5.tar.gz",
@@ -350,7 +349,6 @@ http_archive(
     name = "ros_genpy",
     build_file = "//third_party/ros:genpy.BUILD",
     sha256 = "a0cf129fe90cf342090aac4ca63c33f993f4feecdaf5bc74f410b633e3ea0afc",
-    # https://index.ros.org/p/genpy/github-ros-genpy/#melodic
     strip_prefix = "genpy-0.6.16",
     urls = [
         "https://github.com/ros/genpy/archive/0.6.16.tar.gz",
@@ -360,11 +358,10 @@ http_archive(
 http_archive(
     name = "ros_common_msgs",
     build_file = "//third_party/ros:common_msgs.BUILD",
-    sha256 = "d3c698e7c164e97d135ca341420f266b95f5c4ef995e8faf9a5362f44987718d",
-    # https://index.ros.org/r/common_msgs/github-ros-common_msgs/#melodic
-    strip_prefix = "common_msgs-1.12.8",
+    sha256 = "74af8cc88bdc9c23cbc270d322e50562857e2c877359423f389d51c0735ee230",
+    strip_prefix = "common_msgs-1.13.1",
     urls = [
-        "https://github.com/ros/common_msgs/archive/1.12.8.tar.gz",
+        "https://github.com/ros/common_msgs/archive/1.13.1.tar.gz",
     ],
 )
 
@@ -372,7 +369,6 @@ http_archive(
     name = "ros_std_msgs",
     build_file = "//third_party/ros:std_msgs.BUILD",
     sha256 = "ee6592d37b00a94cab8216aac2cfb5120f6da09ffa94bfe197fe8dc76dd21326",
-    # https://index.ros.org/p/std_msgs/github-ros-std_msgs/#melodic
     strip_prefix = "std_msgs-0.5.13",
     urls = [
         "https://github.com/ros/std_msgs/archive/0.5.13.tar.gz",
@@ -385,25 +381,21 @@ http_archive(
     patch_args = ["-p1"],
     patches = [
         "//third_party/ros/ros_comm:0001-fix-include-path.patch",
-        "//third_party/ros/ros_comm:0002-fix-boost-placeholders-namespace.patch",
-        "//third_party/ros/ros_comm:0003-remove-pluginlib.patch",
+        "//third_party/ros/ros_comm:0002-remove-pluginlib.patch",
     ],
-    sha256 = "1ab904142eecc0be8fd09662df7411d4494bff765dd2a2c6508174802ca7e215",
-    # https://index.ros.org/p/ros_comm/github-ros-ros_comm/#melodic
-    strip_prefix = "ros_comm-1.14.13",
+    sha256 = "0a51857a50cf646db4af85469cb0e4877b1484f7aa0c00ec65a8be7ff574a886",
+    strip_prefix = "ros_comm-1.16.0",
     urls = [
-        "https://github.com/ros/ros_comm/archive/refs/tags/1.14.13.tar.gz",
+        "https://github.com/ros/ros_comm/archive/refs/tags/1.16.0.tar.gz",
     ],
 )
 
 http_archive(
     name = "rosconsole",
     build_file = "//third_party/ros:rosconsole.BUILD",
-    sha256 = "234d83dfddcf864e5d223eaedd58e1505ad0d2707ea4ff497b69c4f28501f179",
-    # https://index.ros.org/p/rosconsole/github-ros-rosconsole/#melodic
-    strip_prefix = "rosconsole-1.13.18",
+    strip_prefix = "rosconsole-1.14.3",
     urls = [
-        "https://github.com/ros/rosconsole/archive/1.13.18.tar.gz",
+        "https://github.com/ros/rosconsole/archive/1.14.3.tar.gz",
     ],
 )
 
@@ -411,9 +403,36 @@ http_archive(
     name = "ros_comm_msgs",
     build_file = "//third_party/ros:ros_comm_msgs.BUILD",
     sha256 = "5b8b91e8671d03ea84ba32a3ea7360bc4594655e7ba3ec6677a984f393aaafbd",
-    # https://index.ros.org/r/ros_comm_msgs/github-ros-ros_comm_msgs/#melodic
     strip_prefix = "ros_comm_msgs-1.11.3",
     urls = [
         "https://github.com/ros/ros_comm_msgs/archive/1.11.3.tar.gz",
     ],
 )
+
+# setup compile toolchain.
+BAZEL_TOOLCHAIN_TAG = "0.8.2"
+
+BAZEL_TOOLCHAIN_SHA = "0fc3a2b0c9c929920f4bed8f2b446a8274cad41f5ee823fd3faa0d7641f20db0"
+
+http_archive(
+    name = "com_grail_bazel_toolchain",
+    canonical_id = BAZEL_TOOLCHAIN_TAG,
+    sha256 = BAZEL_TOOLCHAIN_SHA,
+    strip_prefix = "bazel-toolchain-{tag}".format(tag = BAZEL_TOOLCHAIN_TAG),
+    url = "https://github.com/grailbio/bazel-toolchain/archive/refs/tags/{tag}.tar.gz".format(tag = BAZEL_TOOLCHAIN_TAG),
+)
+
+load("@com_grail_bazel_toolchain//toolchain:deps.bzl", "bazel_toolchain_dependencies")
+
+bazel_toolchain_dependencies()
+
+load("@com_grail_bazel_toolchain//toolchain:rules.bzl", "llvm_toolchain")
+
+llvm_toolchain(
+    name = "llvm_toolchain",
+    llvm_version = "15.0.6",
+)
+
+load("@llvm_toolchain//:toolchains.bzl", "llvm_register_toolchains")
+
+llvm_register_toolchains()
