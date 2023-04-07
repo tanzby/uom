@@ -18,18 +18,5 @@
     },
     // Cpp
     "C_Cpp.intelliSenseEngine": "Disabled",
-    // Python
-    "python.languageServer": "Pylance",
-    "python.analysis.indexing": true,
-    "python.analysis.exclude": [
-        ".cache",
-        "**/bazel*",
-        "**/make*",
-        "**/cmake*",
-        "**/build*",
-        "**/external",
-    ],
-    "files.associations": {
-        "random": "cpp"
-    },
+    "clangd.path": "${workspaceFolder}/external/llvm_toolchain_llvm/bin/clangd",
 }
