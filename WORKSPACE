@@ -317,6 +317,7 @@ http_archive(
 http_archive(
     name = "roscpp_core",
     build_file = "//third_party/ros:roscpp_core.BUILD",
+    sha256 = "a2aa77814ed97b48995c872a405c51f6b0f1ab9d40e38ece483852bbd273ad7b",
     strip_prefix = "roscpp_core-0.7.2",
     urls = [
         "https://github.com/ros/roscpp_core/archive/0.7.2.tar.gz",
@@ -393,6 +394,7 @@ http_archive(
 http_archive(
     name = "rosconsole",
     build_file = "//third_party/ros:rosconsole.BUILD",
+    sha256 = "0b2cbc4f9a92466c0fbae7863482b286ef87692de4941527cb429e6c74639246",
     strip_prefix = "rosconsole-1.14.3",
     urls = [
         "https://github.com/ros/rosconsole/archive/1.14.3.tar.gz",
@@ -430,7 +432,26 @@ load("@com_grail_bazel_toolchain//toolchain:rules.bzl", "llvm_toolchain")
 
 llvm_toolchain(
     name = "llvm_toolchain",
-    llvm_version = "15.0.6",
+    llvm_versions = {
+        "": "15.0.6",
+        "darwin-aarch64": "15.0.7",
+        "darwin-x86_64": "15.0.7",
+    },
+    sha256 = {
+        "": "38bc7f5563642e73e69ac5626724e206d6d539fbef653541b34cae0ba9c3f036",
+        "darwin-aarch64": "867c6afd41158c132ef05a8f1ddaecf476a26b91c85def8e124414f9a9ba188d",
+        "darwin-x86_64": "d16b6d536364c5bec6583d12dd7e6cf841b9f508c4430d9ee886726bd9983f1c",
+    },
+    strip_prefix = {
+        "": "clang+llvm-15.0.6-x86_64-linux-gnu-ubuntu-18.04",
+        "darwin-aarch64": "clang+llvm-15.0.7-arm64-apple-darwin22.0",
+        "darwin-x86_64": "clang+llvm-15.0.7-x86_64-apple-darwin21.0",
+    },
+    urls = {
+        "": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.6/clang+llvm-15.0.6-x86_64-linux-gnu-ubuntu-18.04.tar.xz"],
+        "darwin-aarch64": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.7/clang+llvm-15.0.7-arm64-apple-darwin22.0.tar.xz"],
+        "darwin-x86_64": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.7/clang+llvm-15.0.7-x86_64-apple-darwin21.0.tar.xz"],
+    },
 )
 
 load("@llvm_toolchain//:toolchains.bzl", "llvm_register_toolchains")
