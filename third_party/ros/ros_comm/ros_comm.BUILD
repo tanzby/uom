@@ -104,9 +104,12 @@ cc_ros_library(
     srcs = glob(["clients/roscpp/src/libros/**/*.cpp"]) + [_CONFIG_H],
     hdrs = glob(["clients/roscpp/include/**/*.h"]) + [_ROS_COMMON_H],
     copts = ["-Wno-unused-parameter"],
-    defines = ["BOOST_ALLOW_DEPRECATED_HEADERS"] + select({
+    defines = [
+        "BOOST_ALLOW_DEPRECATED_HEADERS",
+        "BOOST_BIND_GLOBAL_PLACEHOLDERS",
+    ] + select({
         "@platforms//os:macos": ["BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC"],
-        "//conditions:default": [""],
+        "//conditions:default": [],
     }),
     includes = ["clients/roscpp/include"],
     linkopts = ["-lm"],
