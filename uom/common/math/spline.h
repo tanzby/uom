@@ -10,7 +10,7 @@
 #include "glog/logging.h"
 #include "sophus/so3.hpp"
 
-#include "uom/common/field_define.h"
+#include "uom/common/defines.h"
 #include "uom/common/math/sophus_utils.h"
 #include "uom/common/math/spline_common.h"
 #include "uom/sensors/calib_bias.h"

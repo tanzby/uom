@@ -1,4 +1,5 @@
 {
+    "editor.tabSize": 2,
     "git.autorefresh": false,
     "files.exclude": {
         ".cache": true,
@@ -19,4 +20,5 @@
     // Cpp
     "C_Cpp.intelliSenseEngine": "Disabled",
     "clangd.path": "${workspaceFolder}/external/llvm_toolchain_llvm/bin/clangd",
+    "clang-format.executable": "${workspaceRoot}/external/llvm_toolchain_llvm/bin/clang-format",
 }

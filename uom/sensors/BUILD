@@ -4,7 +4,7 @@ cc_library(
     name = "calib_bias",
     hdrs = ["calib_bias.h"],
     deps = [
-        "//uom/common:field_define",
+        "//uom/common:defines",
         "@eigen",
     ],
 )
