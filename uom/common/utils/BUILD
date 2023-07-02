@@ -8,3 +8,11 @@ cc_library(
       "@fmt",
     ]
 )
+
+cc_library(
+    name = "singleton",
+    hdrs = ["singleton.h"],
+    deps = [
+      "//uom/common:defines",
+    ],
+)

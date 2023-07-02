@@ -89,6 +89,12 @@ git_repository(
 )
 
 git_repository(
+    name = "benchmark",
+    remote = "https://github.com/google/benchmark.git",
+    tag = "v1.8.0",
+)
+
+git_repository(
     name = "com_google_protobuf",
     remote = "https://github.com/google/protobuf.git",
     tag = "v3.19.6",

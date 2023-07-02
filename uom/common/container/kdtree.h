@@ -3,11 +3,11 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -20,6 +20,8 @@
 #include "glog/logging.h"
 #include "gtest/gtest_prod.h"
 
+#include "uom/common/container/object_pool.h"
+#include "uom/common/container/priority_queue.h"
 #include "uom/common/defines.h"
 #include "uom/common/utils/fmt_eigen.h"
 
@@ -38,12 +40,20 @@ struct KdTreeParams {
   double max_subtree_ratio = 2.0 / 3.0;
 };
 
-// `PointType` should be `Eigen::Vector<>` types.
-template <typename PointType>
+struct KdTreeSplitInfo {
+  int dim = 0;
+  int index = 0;
+};
+
+// `PointType` should be `Eigen::Vector<>` types. And it is not thread-safe.
+template <typename PointType, bool kUseObjectPool = true>
 class KdTree {
   static constexpr int kDim = PointType::RowsAtCompileTime;
 
  public:
+  EIGEN_STATIC_ASSERT_FIXED_SIZE(PointType);
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(PointType);
+
   using RangeType = Eigen::AlignedBox<double, kDim>;
 
   explicit KdTree(const KdTreeParams& params) : params_{params} {
@@ -55,13 +65,15 @@ class KdTree {
   struct Node;
 
   // Get number of valid nodes of *this.
-  int Size() const { return root_ == nullptr ? 0 : root_->size - NumInvalidNodes(); }
+  [[nodiscard]] int Size() const { return root_ == nullptr ? 0 : root_->size - NumInvalidNodes(); }
 
   // Get number of all nodes of *this.
-  int NumNodes() const { return root_ == nullptr ? 0 : root_->size; }
+  [[nodiscard]] int NumNodes() const { return root_ == nullptr ? 0 : root_->size; }
 
   // Get number of invalid nodes of *this.
-  int NumInvalidNodes() const { return root_ == nullptr ? 0 : root_->num_invalid_nodes; }
+  [[nodiscard]] int NumInvalidNodes() const {
+    return root_ == nullptr ? 0 : root_->num_invalid_nodes;
+  }
 
   // Erase all nodes and build the binary tree from scratch. This function is usaully called at the
   // beginning of pipeline.
@@ -72,6 +84,9 @@ class KdTree {
 
   // Deletes points among the `range`.
   void Delete(const RangeType& range);
+
+  // Clear the tree.
+  void Clear() { root_.reset(); }
 
   // Radius seach from given `query_point` and `search_radius`.
   void RadiusSearch(const PointType& query_point,
@@ -98,18 +113,32 @@ class KdTree {
   // Node structure for kd-tree.
   struct TreeNode;
 
-  // Nearest search helper.
-  struct NearestNeighborSearcher;
+  // Structure for nearest search.
+  struct NearestSearchQueueItem;
+
+  // Pool type with custom acquirer.
+  struct NodeAcquirer;
+  using ObjectPool = ObjectPool<TreeNode, NodeAcquirer>;
 
   // Store node to a RAII strucure to avoid memory leak.
-  using NodeUniquePtr = std::unique_ptr<TreeNode>;
+  template <bool kEnable>
+  struct PtrAlias {};
+  template <>
+  struct PtrAlias<true> {
+    using Ptr = typename ObjectPool::Ptr;
+  };
+  template <>
+  struct PtrAlias<false> {
+    using Ptr = std::unique_ptr<TreeNode>;
+  };
+  using NodeUniquePtr = typename PtrAlias<kUseObjectPool>::Ptr;
 
   // Build tree rooted at `root_` from points recursive.
   void BuildTreeToNodeRecursive(absl::Span<PointType> points, NodeUniquePtr* node);
 
-  // Find the max span dimension and return the axis index. Check fails if size of points are less
-  // than 1.
-  int FindBestSplitAxisAndSortByMaxSpan(absl::Span<PointType> points);
+  // Find the max span dimension and return the axis index and splitted index. Check fails if size
+  // of points are less than 1.
+  KdTreeSplitInfo FindBestSplitAxisAndSortByMaxSpan(absl::Span<PointType> points);
 
   // Deletes(lazy) nodes from trees.
   void DeleteRecursive(const RangeType& range, NodeUniquePtr* node);
@@ -133,26 +162,33 @@ class KdTree {
                              double search_radius,
                              std::vector<PointType>* result) const;
 
+  // Radius search from a node recursively.
+  void NearestSearchRecursive(const NodeUniquePtr& node, const PointType& query_point, int k) const;
+
   // Helper functions for recursively print the tree.
   void PrintTreeRecursive(const std::string& prefix,
                           const NodeUniquePtr& node,
                           bool is_left,
-                          bool is_deleted) const;
+                          bool is_tree_deleted) const;
 
   template <typename Callback>
   void PreOrderTraversalRecursive(int level, TreeNode* node, Callback&& callback) const;
 
   KdTreeParams params_;
 
+  ObjectPool node_pool_;
+
   NodeUniquePtr root_;
+
+  mutable PriorityQueue<NearestSearchQueueItem> nearest_search_queue_;
 
   FRIEND_TEST(KdTreeTest, FindBestSplitAxisAndSortByMaxSpan);
 
   DISALLOW_COPY_MOVE_AND_ASSIGN(KdTree);
 };
 
-template <typename PointType>
-struct KdTree<PointType>::Node {
+template <typename PointType, bool kUseObjectPool>
+struct KdTree<PointType, kUseObjectPool>::Node {
   // The point stored at *this.
   PointType point = PointType::Zero();
   // The division axis of this Node for kd-tree.
@@ -169,10 +205,16 @@ struct KdTree<PointType>::Node {
   bool tree_deleted = false;
   // True if *this is deleted.
   bool point_deleted = false;
+
+  Node() = default;
+  virtual ~Node() = default;
+
+  // Reset all fields.
+  void Reset();
 };
 
-template <typename PointType>
-struct KdTree<PointType>::TreeNode : Node {
+template <typename PointType, bool kUseObjectPool>
+struct KdTree<PointType, kUseObjectPool>::TreeNode : Node {
   // The left child of *this.
   NodeUniquePtr left = nullptr;
   // The right child of *this.
@@ -180,6 +222,11 @@ struct KdTree<PointType>::TreeNode : Node {
   // The parent of *this, not owned.
   TreeNode* parent = nullptr;
 
+  TreeNode() = default;
+  ~TreeNode() = default;
+
+  // Reset all fields.
+  void Reset();
   // Gether structure information from left and right sub-trees.
   void PushUp();
   // Apply structure information to left and right sub-trees.
@@ -190,28 +237,40 @@ struct KdTree<PointType>::TreeNode : Node {
   double RangeTo(const PointType& query_point) const;
 };
 
-template <typename PointType>
-struct KdTree<PointType>::NearestNeighborSearcher {
-  NearestNeighborSearcher(const PointType& query_point, int k) : k(k), query_point(query_point) {}
-
-  void Search(const NodeUniquePtr& node);
-
-  // A heap to maintain the nearest `k` neighbors.
-  using QueueItem = std::pair<const TreeNode*, double>;
-  struct QueueItemCompare {
-    bool operator()(const QueueItem& lhs, const QueueItem& rhs) const {
-      return lhs.second < rhs.second;
-    }
-  };
-  std::priority_queue<QueueItem, std::vector<QueueItem>, QueueItemCompare> queue;
-
-  // Passed parameters.
-  int k = 0;
-  const PointType& query_point;
+template <typename PointType, bool kUseObjectPool>
+struct KdTree<PointType, kUseObjectPool>::NodeAcquirer {
+  void operator()(TreeNode* node) const { node->Reset(); }
 };
 
-template <typename PointType>
-void KdTree<PointType>::TreeNode::PushUp() {
+template <typename PointType, bool kUseObjectPool>
+struct KdTree<PointType, kUseObjectPool>::NearestSearchQueueItem {
+  const TreeNode* node;
+  double distance;
+  bool operator<(const NearestSearchQueueItem& rhs) const { return distance >= rhs.distance; }
+};
+
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::Node::Reset() {
+  point.setZero();
+  axis = 0;
+  size = 1;
+  num_invalid_nodes = 0;
+  range.setEmpty();
+  radius = 0.0;
+  tree_deleted = false;
+  point_deleted = false;
+}
+
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::TreeNode::Reset() {
+  Node::Reset();
+  left = nullptr;
+  right = nullptr;
+  parent = nullptr;
+}
+
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::TreeNode::PushUp() {
   this->size = 1;
   this->range = RangeType(this->point);
   this->num_invalid_nodes = static_cast<int>(this->point_deleted);
@@ -235,8 +294,8 @@ void KdTree<PointType>::TreeNode::PushUp() {
       this->point_deleted && (!left || left->tree_deleted) && (!right || right->tree_deleted);
 }
 
-template <typename PointType>
-void KdTree<PointType>::TreeNode::PushDown() {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::TreeNode::PushDown() {
   auto apply_to_child = [this](TreeNode* child) {
     child->tree_deleted |= this->tree_deleted;
     child->point_deleted |= child->tree_deleted;
@@ -253,28 +312,30 @@ void KdTree<PointType>::TreeNode::PushDown() {
   }
 }
 
-template <typename PointType>
-double KdTree<PointType>::TreeNode::RangeTo(const PointType& query_point) const {
+template <typename PointType, bool kUseObjectPool>
+double KdTree<PointType, kUseObjectPool>::TreeNode::RangeTo(const PointType& query_point) const {
   double squared_distance = 0;
   for (int d = 0; d < kDim; ++d) {
     const double val = query_point[d];
     const double min_val = this->range.min()[d];
     const double max_val = this->range.max()[d];
-    if (val < min_val) {
+    if (val <= min_val) {
       squared_distance += (val - min_val) * (val - min_val);
-    }
-    if (val > max_val) {
+    } else if (val > max_val) {
       squared_distance += (val - max_val) * (val - max_val);
     }
   }
   return std::sqrt(squared_distance);
 }
 
-template <typename PointType>
-void KdTree<PointType>::BuildTree(const std::vector<PointType>& points) {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::BuildTree(const std::vector<PointType>& points) {
   if (points.empty()) {
     return;
   }
+  root_.reset();
+
+  node_pool_.Reserve(points.size());
 
   // Copy points as we need to sort the input points to build the tree.
   std::vector<PointType> workspace = points;
@@ -282,12 +343,13 @@ void KdTree<PointType>::BuildTree(const std::vector<PointType>& points) {
   BuildTreeToNodeRecursive(workspace_span, &root_);
 }
 
-template <typename PointType>
-int KdTree<PointType>::FindBestSplitAxisAndSortByMaxSpan(absl::Span<PointType> points) {
-  CHECK_GT(points.size(), 0);
+template <typename PointType, bool kUseObjectPool>
+KdTreeSplitInfo KdTree<PointType, kUseObjectPool>::FindBestSplitAxisAndSortByMaxSpan(
+    absl::Span<PointType> points) {
+  CHECK_GT(points.size(), 1);
 
-  double min_value[kDim];  // NOLINT
-  double max_value[kDim];  // NOLINT
+  std::array<double, kDim> min_value;
+  std::array<double, kDim> max_value;
   for (int d = 0; d < kDim; ++d) {
     min_value[d] = points[0][d];
     max_value[d] = points[0][d];
@@ -299,64 +361,75 @@ int KdTree<PointType>::FindBestSplitAxisAndSortByMaxSpan(absl::Span<PointType> p
     }
   }
 
-  int max_dim = 0;
+  KdTreeSplitInfo split;
+  split.dim = 0;
   double max_span = max_value[0] - min_value[0];
   for (int d = 1; d < kDim; ++d) {
     const double curr_span = max_value[d] - min_value[d];
     if (curr_span > max_span) {
-      max_dim = d;
+      split.dim = d;
       max_span = curr_span;
     }
   }
 
-  auto cmp = [max_dim](auto&& lhs, auto&& rhs) { return lhs[max_dim] < rhs[max_dim]; };
-  std::nth_element(points.begin(), points.begin() + points.size() / 2, points.end(), cmp);
+  split.index = points.size() / 2;
+  auto cmp = [dim = split.dim](auto&& lhs, auto&& rhs) { return lhs[dim] < rhs[dim]; };
+  std::nth_element(points.begin(), points.begin() + split.index, points.end(), cmp);
 
-  return max_dim;
+  // Find the element that all right's neighhors are larger but not equal to it, so that all the
+  // nodes from left sub-tree are smaller that root.
+  while (split.index > 0 && points[split.index - 1] == points[split.index]) {
+    --split.index;
+  }
+
+  return split;
 }
 
-template <typename PointType>
-void KdTree<PointType>::BuildTreeToNodeRecursive(absl::Span<PointType> points,
-                                                 NodeUniquePtr* root_node) {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::BuildTreeToNodeRecursive(absl::Span<PointType> points,
+                                                                 NodeUniquePtr* root_node) {
   CHECK(root_node != nullptr);
   if (points.empty()) {
-    root_node->reset();
     return;
   }
 
   // Create new node if not exist.
   if (*root_node == nullptr) {
-    *root_node = std::make_unique<TreeNode>();
+    if constexpr (kUseObjectPool) {
+      *root_node = node_pool_.Acquire();
+    } else {
+      *root_node = std::make_unique<TreeNode>();
+    }
   }
   TreeNode& root = (*root_node->get());
 
-  // Find the best division axis, the `points` is splited into two parts as well.
-  root.axis = FindBestSplitAxisAndSortByMaxSpan(points);
-
-  const int mid = points.size() / 2;
-  root.point = points[mid];
-
   // Recursively build sub-trees.
   if (points.size() > 1) {
-    BuildTreeToNodeRecursive(points.subspan(0, mid), &root.left);
-    BuildTreeToNodeRecursive(points.subspan(mid + 1), &root.right);
+    const KdTreeSplitInfo split = FindBestSplitAxisAndSortByMaxSpan(points);
+    root.axis = split.dim;
+    root.point = points[split.index];
+    BuildTreeToNodeRecursive(points.subspan(0, split.index), &root.left);
+    BuildTreeToNodeRecursive(points.subspan(split.index + 1), &root.right);
+  } else {
+    root.point = points[0];
   }
 
   root.PushUp();
 }
 
-template <typename PointType>
-void KdTree<PointType>::Insert(const PointType& point) {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::Insert(const PointType& point) {
   InsertRecursive(point, &root_, root_ == nullptr ? 0 : root_->axis);
 }
 
-template <typename PointType>
-void KdTree<PointType>::Delete(const RangeType& range) {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::Delete(const RangeType& range) {
   DeleteRecursive(range, &root_);
 }
 
-template <typename PointType>
-void KdTree<PointType>::DeleteRecursive(const RangeType& range, NodeUniquePtr* node) {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::DeleteRecursive(const RangeType& range,
+                                                        NodeUniquePtr* node) {
   if (node == nullptr || (*node) == nullptr || (*node)->tree_deleted) {
     return;
   }
@@ -391,12 +464,16 @@ void KdTree<PointType>::DeleteRecursive(const RangeType& range, NodeUniquePtr* n
   }
 }
 
-template <typename PointType>
-void KdTree<PointType>::InsertRecursive(const PointType& point,
-                                        NodeUniquePtr* node,
-                                        int parent_axis) {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::InsertRecursive(const PointType& point,
+                                                        NodeUniquePtr* node,
+                                                        int parent_axis) {
   if ((*node) == nullptr) {
-    *node = std::make_unique<TreeNode>();
+    if constexpr (kUseObjectPool) {
+      *node = node_pool_.Acquire();
+    } else {
+      *node = std::make_unique<TreeNode>();
+    }
     (*node)->point = point;
     (*node)->axis = (node == &root_) ? 0 : ((parent_axis + 1) % kDim);
     (*node)->PushUp();
@@ -417,8 +494,8 @@ void KdTree<PointType>::InsertRecursive(const PointType& point,
   }
 }
 
-template <typename PointType>
-void KdTree<PointType>::Rebuild(NodeUniquePtr* node) {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::Rebuild(NodeUniquePtr* node) {
   if (node == nullptr || (*node) == nullptr) {
     return;
   }
@@ -429,9 +506,9 @@ void KdTree<PointType>::Rebuild(NodeUniquePtr* node) {
   BuildTreeToNodeRecursive(absl::MakeSpan(points), node);
 }
 
-template <typename PointType>
-void KdTree<PointType>::FlattenRecursive(const NodeUniquePtr& node,
-                                         std::vector<PointType>* output) const {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::FlattenRecursive(const NodeUniquePtr& node,
+                                                         std::vector<PointType>* output) const {
   if (node == nullptr || node->tree_deleted) {
     return;
   }
@@ -442,75 +519,28 @@ void KdTree<PointType>::FlattenRecursive(const NodeUniquePtr& node,
   FlattenRecursive(node->right, output);
 }
 
-template <typename PointType>
-void KdTree<PointType>::RadiusSearch(const PointType& query_point,
-                                     double search_radius,
-                                     std::vector<PointType>* result) const {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::RadiusSearch(const PointType& query_point,
+                                                     double search_radius,
+                                                     std::vector<PointType>* result) const {
   CHECK_GE(search_radius, 0.0);
   CHECK_NOTNULL(result)->clear();
   RadiusSearchRecursive(root_, query_point, search_radius, result);
 }
 
-template <typename PointType>
-void KdTree<PointType>::NearestNeighborSearcher::Search(const NodeUniquePtr& node) {
-  if (node == nullptr || node->tree_deleted) {
-    return;
-  }
-
-  if (!node->point_deleted) {
-    const double dist = (node->point - query_point).norm();
-    if (queue.size() < k || dist < queue.top().second) {
-      if (queue.size() >= k) {
-        queue.pop();
-      }
-      queue.emplace(node.get(), dist);
-    }
-  }
-
-  const double to_left_range_distance =
-      node->left ? node->left->RangeTo(query_point) : std::numeric_limits<double>::max();
-  const double to_right_range_distance =
-      node->right ? node->right->RangeTo(query_point) : std::numeric_limits<double>::max();
-
-  if (queue.size() < k || (to_left_range_distance < queue.top().second &&
-                           to_right_range_distance < queue.top().second)) {
-    // Search left first then right, or right first then left.
-    if (to_left_range_distance < to_right_range_distance) {
-      Search(node->left);
-      if (queue.size() > k || to_right_range_distance < queue.top().second) {
-        Search(node->right);
-      }
-    } else {  // to_left_range_distance >= to_right_range_distance
-      Search(node->right);
-      if (queue.size() > k || to_left_range_distance < queue.top().second) {
-        Search(node->left);
-      }
-    }
-    return;
-  }
-
-  // If the queue is full, check the range first.
-  if (to_left_range_distance < queue.top().second) {
-    Search(node->left);
-  }
-  if (to_right_range_distance < queue.top().second) {
-    Search(node->right);
-  }
-}
-
-template <typename PointType>
-int KdTree<PointType>::NearestSearch(const PointType& query_point,
-                                     int k,
-                                     std::vector<PointType>* points,
-                                     std::vector<double>* distances) {
+template <typename PointType, bool kUseObjectPool>
+int KdTree<PointType, kUseObjectPool>::NearestSearch(const PointType& query_point,
+                                                     int k,
+                                                     std::vector<PointType>* points,
+                                                     std::vector<double>* distances) {
   CHECK_GE(k, 1);
   CHECK_NOTNULL(points)->clear();
   CHECK_NOTNULL(distances)->clear();
 
   // Performs recursively searching.
-  NearestNeighborSearcher searcher(query_point, k);
-  searcher.Search(root_);
-  const int k_found = std::min<int>(k, searcher.queue.size());
+  nearest_search_queue_.clear();
+  NearestSearchRecursive(root_, query_point, k);
+  const int k_found = std::min<int>(k, nearest_search_queue_.size());
   if (k_found == 0) {
     return 0;
   }
@@ -519,18 +549,19 @@ int KdTree<PointType>::NearestSearch(const PointType& query_point,
   points->resize(k_found);
   distances->resize(k_found);
   for (int i = 0; i < k_found; i++) {
-    (*points)[k_found - i - 1] = searcher.queue.top().first->point;
-    (*distances)[k_found - i - 1] = searcher.queue.top().second;
-    searcher.queue.pop();
+    (*points)[k_found - i - 1] = nearest_search_queue_.top().node->point;
+    (*distances)[k_found - i - 1] = nearest_search_queue_.top().distance;
+    nearest_search_queue_.pop();
   }
   return k_found;
 }
 
-template <typename PointType>
-void KdTree<PointType>::RadiusSearchRecursive(const NodeUniquePtr& node,
-                                              const PointType& query_point,
-                                              double search_radius,
-                                              std::vector<PointType>* result) const {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::RadiusSearchRecursive(
+    const NodeUniquePtr& node,
+    const PointType& query_point,
+    double search_radius,
+    std::vector<PointType>* result) const {
   if (node == nullptr) {
     return;
   }
@@ -560,8 +591,60 @@ void KdTree<PointType>::RadiusSearchRecursive(const NodeUniquePtr& node,
   RadiusSearchRecursive(node->right, query_point, search_radius, result);
 }
 
-template <typename PointType>
-bool KdTree<PointType>::IsSubtreeNeedRebuild(const TreeNode& node) {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::NearestSearchRecursive(const NodeUniquePtr& node,
+                                                               const PointType& query_point,
+                                                               int k) const {
+  if (node == nullptr || node->tree_deleted) {
+    return;
+  }
+
+  // Helper function to get the distance of fathest neighbor in queue.
+  auto max_distance = [this]() { return nearest_search_queue_.top().distance; };
+
+  if (!node->point_deleted) {
+    const double dist = (node->point - query_point).norm();
+    if (nearest_search_queue_.size() < k || dist < max_distance()) {
+      if (nearest_search_queue_.size() >= k) {
+        nearest_search_queue_.pop();
+      }
+      nearest_search_queue_.emplace(NearestSearchQueueItem{node.get(), dist});
+    }
+  }
+
+  const double to_left_range_distance =
+      node->left ? node->left->RangeTo(query_point) : std::numeric_limits<double>::max();
+  const double to_right_range_distance =
+      node->right ? node->right->RangeTo(query_point) : std::numeric_limits<double>::max();
+
+  if (nearest_search_queue_.size() < k ||
+      (to_left_range_distance < max_distance() && to_right_range_distance < max_distance())) {
+    // Search left first then right, or right first then left.
+    if (to_left_range_distance < to_right_range_distance) {
+      NearestSearchRecursive(node->left, query_point, k);
+      if (nearest_search_queue_.size() > k || to_right_range_distance < max_distance()) {
+        NearestSearchRecursive(node->right, query_point, k);
+      }
+    } else {  // to_left_range_distance >= to_right_range_distance
+      NearestSearchRecursive(node->right, query_point, k);
+      if (nearest_search_queue_.size() > k || to_left_range_distance < max_distance()) {
+        NearestSearchRecursive(node->left, query_point, k);
+      }
+    }
+    return;
+  }
+
+  // If the queue is full, check the range first.
+  if (to_left_range_distance < max_distance()) {
+    NearestSearchRecursive(node->left, query_point, k);
+  }
+  if (to_right_range_distance < max_distance()) {
+    NearestSearchRecursive(node->right, query_point, k);
+  }
+}
+
+template <typename PointType, bool kUseObjectPool>
+bool KdTree<PointType, kUseObjectPool>::IsSubtreeNeedRebuild(const TreeNode& node) {
   if (node.size < params_.min_tree_size_allow_rebuild) {
     return false;
   }
@@ -577,16 +660,16 @@ bool KdTree<PointType>::IsSubtreeNeedRebuild(const TreeNode& node) {
   return deleted_ratio > params_.max_deleted_ratio;
 }
 
-template <typename PointType>
-void KdTree<PointType>::PrintTree() const {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::PrintTree() const {
   PrintTreeRecursive("", root_, false, false);
 }
 
-template <typename PointType>
-void KdTree<PointType>::PrintTreeRecursive(const std::string& prefix,
-                                           const NodeUniquePtr& node,
-                                           bool is_left,
-                                           bool is_tree_deleted) const {
+template <typename PointType, bool kUseObjectPool>
+void KdTree<PointType, kUseObjectPool>::PrintTreeRecursive(const std::string& prefix,
+                                                           const NodeUniquePtr& node,
+                                                           bool is_left,
+                                                           bool is_tree_deleted) const {
   static Eigen::IOFormat kCommaInitFmt(
       Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", "[", "]");
 
@@ -609,11 +692,11 @@ void KdTree<PointType>::PrintTreeRecursive(const std::string& prefix,
   PrintTreeRecursive(next_prefix, node->right, false, is_tree_deleted);
 }
 
-template <typename PointType>
+template <typename PointType, bool kUseObjectPool>
 template <typename Callback>
-void KdTree<PointType>::PreOrderTraversalRecursive(int level,
-                                                   TreeNode* node,
-                                                   Callback&& callback) const {
+void KdTree<PointType, kUseObjectPool>::PreOrderTraversalRecursive(int level,
+                                                                   TreeNode* node,
+                                                                   Callback&& callback) const {
   if (node == nullptr) {
     return;
   }

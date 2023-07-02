@@ -24,12 +24,3 @@
   void operator=(const TypeName&) = delete;     \
   TypeName(TypeName&&) = delete;                \
   void operator=(TypeName&&) = delete
-
-// Compiler attributes
-#if (defined(__GNUC__) || defined(__APPLE__)) && !defined(SWIG)
-// Compiler supports GCC-style attributes
-#define MUST_USE_RESULT __attribute__((warn_unused_result))
-#else
-// Non-GCC equivalents
-#define MUST_USE_RESULT
-#endif

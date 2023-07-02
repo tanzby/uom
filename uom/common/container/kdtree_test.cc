@@ -60,27 +60,74 @@ std::vector<Vector2d> MockDataPoints() {
 }
 
 TEST(KdTreeTest, FindBestSplitAxisAndSortByMaxSpan) {
-  KdTreeParams params;
-  KdTree<Eigen::Vector3d> kdtree(params);
-  std::vector<Eigen::Vector3d> mutable_points{
-      {0, 1, -9},
-      {1, 3, 8},
-      {2, 5, 1},
-      {3, 7, 5},
-      {4, 9, -3},
-      {5, 0, 9},
-  };
+  // Case 1.
+  {
+    KdTreeParams params;
+    KdTree<Eigen::Vector3d> kdtree(params);
+    std::vector<Eigen::Vector3d> mutable_points{
+        {0, 1, -9},
+        {1, 3, 8},
+        {2, 5, 1},
+        {3, 7, 5},
+        {4, 9, -3},
+        {5, 0, 9},
+    };
 
-  auto array_span = absl::MakeSpan(mutable_points);
-  const int split_axis = kdtree.FindBestSplitAxisAndSortByMaxSpan(array_span);
-  ASSERT_EQ(2, split_axis);
+    auto array_span = absl::MakeSpan(mutable_points);
+    const KdTreeSplitInfo split = kdtree.FindBestSplitAxisAndSortByMaxSpan(array_span);
+    ASSERT_EQ(2, split.dim);
+    ASSERT_EQ(3, split.index);
+    ASSERT_THAT(
+        array_span.subspan(0, split.index),
+        testing::UnorderedElementsAre(
+            Eigen::Vector3d{0, 1, -9}, Eigen::Vector3d{4, 9, -3}, Eigen::Vector3d{2, 5, 1}));
+  }
 
-  ASSERT_THAT(array_span.subspan(0, array_span.size() / 2),
-              testing::UnorderedElementsAre(
-                  Eigen::Vector3d{0, 1, -9}, Eigen::Vector3d{4, 9, -3}, Eigen::Vector3d{2, 5, 1}));
-  ASSERT_THAT(array_span.subspan(array_span.size() / 2),
-              testing::UnorderedElementsAre(
-                  Eigen::Vector3d{3, 7, 5}, Eigen::Vector3d{1, 3, 8}, Eigen::Vector3d{5, 0, 9}));
+  // Case 2.
+  {
+    KdTreeParams params;
+    KdTree<Vector2d> kdtree(params);
+    std::vector<Vector2d> mutable_points{
+        {0, 0},
+        {2, 0},
+        {3, 0},
+        {1, 0},
+        {2, 0},
+        {2, 0},
+    };
+    auto array_span = absl::MakeSpan(mutable_points);
+    const KdTreeSplitInfo split = kdtree.FindBestSplitAxisAndSortByMaxSpan(array_span);
+    ASSERT_EQ(0, split.dim);
+    ASSERT_EQ(2, split.index);
+    ASSERT_THAT(array_span.subspan(0, split.index),
+                testing::UnorderedElementsAre(Vector2d{0, 0}, Vector2d{1, 0}));
+  }
+
+  // Case 3. only two points.
+  {
+    KdTreeParams params;
+    KdTree<Vector2d> kdtree(params);
+    {
+      std::vector<Vector2d> mutable_points{
+          {2, 0},
+          {0, 0},
+      };
+      auto array_span = absl::MakeSpan(mutable_points);
+      const KdTreeSplitInfo split = kdtree.FindBestSplitAxisAndSortByMaxSpan(array_span);
+      ASSERT_THAT(array_span.subspan(0, split.index),
+                  testing::UnorderedElementsAre(Vector2d{0, 0}));
+    }
+    {
+      std::vector<Vector2d> mutable_points{
+          {0, 0},
+          {2, 0},
+      };
+      auto array_span = absl::MakeSpan(mutable_points);
+      const KdTreeSplitInfo split = kdtree.FindBestSplitAxisAndSortByMaxSpan(array_span);
+      ASSERT_THAT(array_span.subspan(0, split.index),
+                  testing::UnorderedElementsAre(Vector2d{0, 0}));
+    }
+  }
 }
 
 TEST(KdTreeTest, BuildTree) {
@@ -101,6 +148,7 @@ TEST(KdTreeTest, BuildTree) {
     };
     kdtree.BuildTree(points);
     ASSERT_EQ(points.size(), kdtree.Size());
+    AssertPreOrderTraversalResultAre(kdtree, Vector2d{10, 10});
   }
 
   // Multi-points.
@@ -274,7 +322,7 @@ TEST(KdTreeTest, NearestSearch) {
 
   // We will found {{6, 5}, {5, 8}, {4, 2}, {2, 4}} with these input. To verify the lazy-deletion,
   // we remove {2, 4} and {4, 2}
-  const Vector2d query_point{5, 5};
+  const Vector2d query_point{4.9, 5.0};
   const int k = 4;
   const KdTree<Vector2d>::RangeType deleted_range(Vector2d{1.9, 1.9}, Vector2d{4.1, 4.1});
   kdtree.Delete(deleted_range);
