@@ -18,8 +18,12 @@ hedron_compile_commands_setup()
 
 new_git_repository(
     name = "eigen",
-    build_file = "//third_party:eigen.BUILD",
+    build_file = "//third_party/eigen:eigen.BUILD",
     commit = "3147391d946bb4b6c68edd901f2add6ac1f31f8c",  # 3.4.0
+    patch_args = ["-p1"],
+    patches = [
+        "//third_party/eigen:0001-delete-unused-but-set-variables.patch",
+    ],
     remote = "https://gitlab.com/libeigen/eigen.git",
 )
 
@@ -82,6 +86,12 @@ git_repository(
     repo_mapping = {
         "@com_github_gflags_gflags": "@gflags",
     },
+)
+
+git_repository(
+    name = "benchmark",
+    remote = "https://github.com/google/benchmark.git",
+    tag = "v1.8.0",
 )
 
 git_repository(

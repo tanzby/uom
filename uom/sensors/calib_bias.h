@@ -4,7 +4,7 @@
 
 #include "Eigen/Dense"
 
-#include "uom/common/field_define.h"
+#include "uom/common/defines.h"
 
 /// @brief Static calibration for accelerometer.
 ///

@@ -2,3 +2,4 @@ common --color=yes
 
 build --jobs 8
 build --cxxopt='-std=c++17' --cxxopt='-Wall' --cxxopt='-Werror' --cxxopt='-Wno-deprecated-declarations'
+build --incompatible_enable_cc_toolchain_resolution

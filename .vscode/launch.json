@@ -1,0 +1,17 @@
+{
+  "configurations": [
+    {
+      "name": "(codelldb) 启动",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/bazel-bin/${relativeFileDirname}/${fileBasenameNoExtension}",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "bazel build (debug)",
+      "sourceMap": {
+        "/proc/self/cwd": "${workspaceFolder}",
+        ".": "${workspaceFolder}"
+      },
+    }
+  ]
+}

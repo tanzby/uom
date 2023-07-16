@@ -11,5 +11,22 @@
             },
             "problemMatcher": []
         },
+        {
+            "label": "bazel build (debug)",
+            "type": "shell",
+            "command": "bazel",
+            "args": [
+                "build",
+                "--compilation_mode=dbg",
+                "--spawn_strategy=local",
+                "--copt=\"-g\"",
+                "--strip=\"never\"",
+                "//${relativeFileDirname}:${fileBasenameNoExtension}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
     ]
 }

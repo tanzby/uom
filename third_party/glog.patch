@@ -1,11 +1,12 @@
-From 4879a5dbf8e7f21b23a4519149b61019900999e6 Mon Sep 17 00:00:00 2001
+From 07d8d0b3b4728e7cec84767cce221ff5e098421e Mon Sep 17 00:00:00 2001
 From: tanzby <tanzby@outlook.com>
 Date: Sun, 2 Apr 2023 01:16:03 +0800
 Subject: [PATCH] patch
 
 ---
- bazel/glog.bzl | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ bazel/glog.bzl   | 6 +++++-
+ src/symbolize.cc | 2 --
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/bazel/glog.bzl b/bazel/glog.bzl
 index 4208d9e..d34098f 100644
@@ -31,6 +32,21 @@ index 4208d9e..d34098f 100644
              }),
          deps = gflags_deps + select({
              "@bazel_tools//src/conditions:windows": [":strip_include_prefix_hack"],
+diff --git a/src/symbolize.cc b/src/symbolize.cc
+index d979b82..15418d9 100644
+--- a/src/symbolize.cc
++++ b/src/symbolize.cc
+@@ -534,10 +534,8 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
+   // Iterate over maps and look for the map containing the pc.  Then
+   // look into the symbol tables inside.
+   char buf[1024];  // Big enough for line of sane /proc/self/maps
+-  unsigned num_maps = 0;
+   LineReader reader(wrapped_maps_fd.get(), buf, sizeof(buf), 0);
+   while (true) {
+-    num_maps++;
+     const char *cursor;
+     const char *eol;
+     if (!reader.ReadLine(&cursor, &eol)) {  // EOF or malformed line.
 -- 
 2.25.1
 
